@@ -19,7 +19,7 @@ class Column:
     return self.codebook[key]
 
 def similiraity_cutoff(dim, num_cols, vsa_type):
-  
+  pass
 
 class HDDB:
   def __init__(self, dim:int=10_000, vsa_type:str='MAP'):
