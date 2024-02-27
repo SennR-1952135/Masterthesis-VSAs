@@ -1,11 +1,14 @@
 from typing import Any, List, Optional, Tuple, overload, Type, Dict
-from utils import Dictionary, Codebook, normalise_partial, theoretical_similarity
 from functools import partial
 from scipy import stats
 import torchhd, torch
 import numpy as np
 import math
 
+import sys
+sys.path.append('src')
+from shared_code.helpers import normalise_partial, theoretical_similarity
+from shared_code.classes import Codebook
 class Column:
   def __init__(self, name:str, vsa_type:str = 'MAP', elem_dim:int = 10_000, dtype:Type = str):
     self.name = name
