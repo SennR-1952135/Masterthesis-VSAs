@@ -3,7 +3,7 @@ from typing import Any, List, Dict, Optional, Tuple, overload, Type
 from functools import partial
 from .helpers import similarity_func_partial
 
-class Dictionary:
+class Vocabulary:
     def __init__(self):
         self.word2idx: Dict[str, int]  = {}
         self.idx2word: List[str] = []
@@ -26,12 +26,12 @@ class Codebook():
         self.vectors: List[torchhd.VSATensor] = []
 
     def add_value(self, value:str, vsa_vector:Optional[torchhd.VSATensor] = None) -> torchhd.VSATensor:
-        """Add value to codebook
+        r"""Add value to codebook
         Args:
           value: value to be added
           vsa_vector: vector representation of value; must be of same dimension as codebook
-          Returns:
-            Vector representation of value
+        Returns:
+          Vector representation of value
         """
         if value not in self.dictionary.word2idx:
             self.dictionary.add_word(value)
