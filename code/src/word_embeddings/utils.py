@@ -62,11 +62,12 @@ class WikiTextDataset:
     def __init__(self, input_file, out_dir):
         self.data_file = input_file
         self.out_dir = out_dir
-        self.max_documents = 3000
 
         self.stopwords = set(stopwords.words('english') + list(string.punctuation) + ['``', "''"])
-
+        self.doc_count = 0
         self.process_data()
+        print(self.doc_count)
+
 
     def process_data(self):
         """
@@ -76,7 +77,7 @@ class WikiTextDataset:
         """
         current_text_tokens = []
         current_title = ''
-        doc_count = 0
+        self.doc_count = 0
         newline_only_encountered = True #needed to disinguish title from text beginning and ending with = signs
 
         for pqf in tqdm(parquetFileIterator(self.data_file)):
@@ -86,15 +87,14 @@ class WikiTextDataset:
                 newline_only_encountered = True
                 continue
             # check if text fragment is a title
-            if newline_only_encountered and text_fragment.startswith("=") and text_fragment.endswith("=") and text_fragment.count("=") == 2:
+            if newline_only_encountered and text_fragment.startswith("=") and text_fragment.endswith("=") and text_fragment.count("=") == 2:# and len(text_fragment) < 100:
                 if current_text_tokens:
                   self._add_document(current_title, current_text_tokens)
-                  doc_count += 1
+                  self.doc_count += 1
                 
                 current_title = text_fragment.replace("=", "").strip()
                 current_text_tokens = []
-                if doc_count == self.max_documents:
-                    return
+
             else:
                 sentence_tokenized = self._process_text_fragment(text_fragment)
                 if sentence_tokenized:
@@ -102,8 +102,8 @@ class WikiTextDataset:
             newline_only_encountered = False
     
     def _add_document(self, title, text):
-        if len(text) < 50:
-            return
+        # if len(text) < 50:
+        #     return
 
         with open(f"{self.out_dir}/{self.process_title(title)}.txt", "w+") as f:
             f.write(" ".join(text))
@@ -136,7 +136,7 @@ class WikiTextDataset:
         sentence_tokenized = text_fragment.split() #word_tokenize(text_fragment)
         sentence_tokenized = [word for word in sentence_tokenized if word not in self.stopwords]
         sentence_tokenized = [word if word.isalpha() else '<num>' for word in sentence_tokenized]
-        # sentence_tokenized = [word for word in sentence_tokenized if len(word) > 2]
+        sentence_tokenized = [word for word in sentence_tokenized if len(word) >= 2]
 
         return sentence_tokenized
 
