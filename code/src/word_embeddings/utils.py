@@ -32,7 +32,7 @@ class Document:
         for word in set(text):
             self.vocabulary.add_word(word)
 
-def ParquetFileIterator(file_name, batch_size=100):
+def ParquetFileIterator(file_name, batch_size=1000):
     parquet_file = pq.ParquetFile(file_name)
     for record_batch in parquet_file.iter_batches(batch_size=batch_size):
         for d in record_batch.to_pylist():
@@ -48,6 +48,8 @@ class WikiTextDataset:
         self.vocabulary = Vocabulary()
         self.max_documents = 3000
 
+        self.stopwords = set(stopwords.words('english') + list(string.punctuation) + ['``', "''"])
+
         self.process_data()
 
     def process_data(self):
@@ -59,32 +61,40 @@ class WikiTextDataset:
         current_text_tokens = []
         current_title = ''
 
-        for pqf in ParquetFileIterator(self.data_file):
-                text_fragment = pqf['text']
-                # if text fragment contains exactly 2 = signs, it is a title
-                text_fragment = text_fragment.strip()
-                if text_fragment.count("=") == 2 and text_fragment.startswith("=") and text_fragment.endswith("="):
-                    if current_text_tokens:
-                      self._add_document(current_title, current_text_tokens)
-                    
-                    current_title = text_fragment.replace("=", "").strip()
-                    current_text_tokens = []
-                    if len(self.documents) == self.max_documents:
-                        return
-                    continue
+        for pqf in tqdm(ParquetFileIterator(self.data_file)):
+            text_fragment = pqf['text']
+            # if text fragment contains exactly 2 = signs, it is a title
+            text_fragment = text_fragment.strip()
+            if text_fragment.count("=") == 2 and text_fragment.startswith("=") and text_fragment.endswith("="):
+                if current_text_tokens:
+                  self._add_document(current_title, current_text_tokens)
                 
-                sentence_tokenized = self._process_text_fragment(text_fragment)
-                if sentence_tokenized:
-                    current_text_tokens.extend(sentence_tokenized)
-                    for word in sentence_tokenized:
-                        self.vocabulary.add_word(word)
+                current_title = text_fragment.replace("=", "").strip()
+                current_text_tokens = []
+                if len(self.documents) == self.max_documents:
+                    return
+                continue
+            
+            sentence_tokenized = self._process_text_fragment(text_fragment)
+            if sentence_tokenized:
+                current_text_tokens.extend(sentence_tokenized)
+                for word in sentence_tokenized:
+                    self.vocabulary.add_word(word)
     
     def _add_document(self, title, text):
+        if len(text) < 50:
+            return
         doc = Document(title, text)
         self.documents.append(doc)
 
+        with open(f"{self.out_dir}/{self.process_title(title)}.txt", "w+") as f:
+            f.write(" ".join(text))
+
 
     def process_title(self, title):
+        title = title.replace(" ", "_")
+        title = title.replace("/", "_")
+        title = title.replace(".", "_")
         return title
 
     def _process_text_fragment(self, text_fragment):
@@ -96,12 +106,14 @@ class WikiTextDataset:
             return
         # remove <unk> tokens
         text_fragment = text_fragment.replace("<unk>", "")
-        # text_fragment = re.sub(r'\d+', '<num>', text_fragment)
+        text_fragment = text_fragment.lower()
+        # text_fragment = re.sub(r'[\d\w]*[\d][\d\w]*', '<num>', text_fragment)
 
         sentence_tokenized = word_tokenize(text_fragment)
-        sentence_tokenized = [word.lower() for word in sentence_tokenized if not (word in stopwords.words() or word in string.punctuation + '``' + "''")]
+        sentence_tokenized = [word for word in sentence_tokenized if word not in self.stopwords]
         sentence_tokenized = [word if word.isalpha() else '<num>' for word in sentence_tokenized]
-        
+        # sentence_tokenized = [word for word in sentence_tokenized if len(word) > 2]
+
         # sentence_tokenized = [word_tokenize(sentence) for sentence in sent_tokenize(text_fragment)]
         # sentence_tokenized = [[word.lower() for word in sentence] for sentence in sentence_tokenized]
         # sentence_tokenized = gensim.utils.simple_preprocess(text_fragment, deacc=True)
