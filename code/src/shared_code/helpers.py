@@ -53,8 +53,6 @@ def top_k_vectors(reference_vector, vectors, topk=1, vsa_type='BSC'):
       topk_sim: list of top k similarities
       topk_idx: list of top k indices
     """
-    # remove reference_vector from vectors if it is in there
-    vectors[vectors != reference_vector]
     similarity_func = partial(similarity_func_partial, vsa_type)
     sim = similarity_func(reference_vector, vectors)
     topk_sim, topk_idx = torch.topk(sim, topk, -1)
