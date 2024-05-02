@@ -7,6 +7,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 nltk.download('punkt')
+import os
 
 # Look into lemmatizing and stemming
 # from nltk.stem import WordNetLemmatizer
@@ -62,6 +63,9 @@ class WikiTextDataset:
     def __init__(self, input_file, out_dir):
         self.data_file = input_file
         self.out_dir = out_dir
+        # create out dir if not exists
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
 
         self.stopwords = set(stopwords.words('english') + list(string.punctuation) + ['``', "''"])
         self.doc_count = 0
@@ -90,7 +94,7 @@ class WikiTextDataset:
             if newline_only_encountered and text_fragment.startswith("=") and text_fragment.endswith("=") and text_fragment.count("=") == 2:# and len(text_fragment) < 100:
                 if current_text_tokens:
                   self._add_document(current_title, current_text_tokens)
-                  self.doc_count += 1
+                  # self.doc_count += 1
                 
                 current_title = text_fragment.replace("=", "").strip()
                 current_text_tokens = []
@@ -102,17 +106,20 @@ class WikiTextDataset:
             newline_only_encountered = False
     
     def _add_document(self, title, text):
-        # if len(text) < 50:
-        #     return
-
         with open(f"{self.out_dir}/{self.process_title(title)}.txt", "w+") as f:
             f.write(" ".join(text))
+
+        self.doc_count += 1
 
 
     def process_title(self, title):
         title = title.replace(" ", "_")
         title = title.replace("/", "_")
         title = title.replace(".", "_")
+        
+        # check if title already exists, multiple unknown titles are in dataset
+        if title == "<unk>":
+            title = "unknown_" + str(self.doc_count)
         return title
 
     def _check_subheading(self, text_fragment):
@@ -125,9 +132,6 @@ class WikiTextDataset:
         # skip subheadings
         if self._check_subheading(text_fragment):
             return
-        # # skip empty lines
-        # if text_fragment.strip() == "":
-        #     return
         # remove <unk> tokens
         text_fragment = text_fragment.replace("<unk>", "")
         text_fragment = text_fragment.lower()
@@ -139,24 +143,6 @@ class WikiTextDataset:
         sentence_tokenized = [word for word in sentence_tokenized if len(word) >= 2]
 
         return sentence_tokenized
-
-    def __len__(self):
-        return
-        return len(self.documents)
-
-    def __getitem__(self, token):
-        return
-        return self.documents[token]
-
-    def __iter__(self):
-        return
-        return iter(self.documents)
-    
-    def get_word_frequency(self, word, document_frequency=False):
-        return
-        if document_frequency:
-            return sum([word in doc.vocabulary.idx2word for doc in self.documents])
-        return sum([doc.text.count(word) for doc in self.documents])
 class WikiTextDatasetPrev:
     """Tokenization and vocabulary building for text corpus."""
 
