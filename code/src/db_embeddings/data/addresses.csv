@@ -1,9 +1,9 @@
-fname,lname,address,city,state,zip
-John,Doe,120 jefferson st.,Riverside,NJ,08075
-Jack,McGinnis,220 hobo Av.,Philadelphia,PA,09119
-John,Repici,120 Jefferson St.,Riverside,NJ,08075
-Stephen,Tyler,"7452 Terrace ""At the Plaza"" road",Sioux Falls,SD,91234
-John,Blankman,None,Sioux Falls,SD,00298
-Joan,Anne,"9th, at Terrace plc",Denver,CO,00123
-Jack,Repici,120 Jefferson St.,Riverside,NJ,08075
-Lilly,Repici,Philly St. 21,Philadelphia,PA,09119
+fname,lname,address,city,state,gender
+John,Doe,120 jefferson st.,Riverside,NJ,M
+Jack,McGinnis,220 hobo Av.,Philadelphia,PA,M
+John,Repici,120 Jefferson St.,Riverside,NJ,M
+Stephen,Tyler,"7452 Terrace ""At the Plaza"" road",Sioux Falls,SD,M
+John,Blankman,None,Sioux Falls,SD,M
+Joan,Anne,"9th, at Terrace plc",Denver,CO,F
+Jack,Repici,120 Jefferson St.,Riverside,NJ,M
+Lilly,Repici,Philly St. 21,Philadelphia,PA,F

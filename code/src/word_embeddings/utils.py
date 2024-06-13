@@ -1,4 +1,4 @@
-import gensim
+# import gensim
 from tqdm import tqdm
 import pyarrow.parquet as pq
 import re

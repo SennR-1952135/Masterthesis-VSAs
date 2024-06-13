@@ -22,7 +22,7 @@ class Codebook():
         self.dim = dim
         self.vsa_type: str = vsa_type
         self.similarity_func = partial(similarity_func_partial, vsa_type)
-        self.dictionary: Dictionary = Dictionary()
+        self.dictionary: Vocabulary = Vocabulary()
         self.vectors: List[torchhd.VSATensor] = []
 
     def add_value(self, value:str, vsa_vector:Optional[torchhd.VSATensor] = None) -> torchhd.VSATensor:
@@ -39,7 +39,9 @@ class Codebook():
             self.vectors.append(value_vector)
         return self.vectors[self.dictionary.word2idx[value]]
     
-    def most_similar_values(self, vector: torchhd.VSATensor, topk: int = 1) -> List[Tuple[torchhd.VSATensor, float]]:
+    def most_similar_values(self, vector: torchhd.VSATensor, topk: int = 0) -> List[Tuple[torchhd.VSATensor, float]]:
+        if topk == 0:
+            topk = len(self.dictionary)
         vector_stack = torch.stack(self.vectors, dim=0)
         sim = self.similarity_func(vector, vector_stack)
         topk_sim, topk_idx = torch.topk(sim, topk)

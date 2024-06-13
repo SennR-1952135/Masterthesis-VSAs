@@ -6,7 +6,7 @@ import numpy as np
 import math
 
 import sys
-sys.path.append('src')
+sys.path.append('..')
 from shared_code.helpers import normalise_partial, theoretical_similarity
 from shared_code.classes import Codebook
 class Column:
@@ -20,6 +20,9 @@ class Column:
 
   def add_value(self, value:str):
     return self.codebook.add_value(value)
+
+  def most_similar_values(self, input: torchhd.VSATensor, topk: int = 1) -> List[Tuple[str, float]]:
+    return self.codebook.most_similar_values(input, topk)
   
   def __getitem__(self, key):
     return self.codebook[key]
@@ -60,8 +63,24 @@ class HDDB:
     row = torchhd.multiset(row_vectors)
     self.rows.add_value(row_key, self.normalise(row))
 
-  def most_similar_rows(self, row: torchhd.VSATensor, topk: int = 1):
-    return self.rows.most_similar_values(row, topk)
+  def most_similar_rows(self, input: torchhd.VSATensor, topk: int = 1, recall: float = 0) -> List[Tuple[torchhd.VSATensor, float]]:
+    if recall > 0:
+      cutoff = self.similiraity_cutoff(recall)
+      res = self.rows.most_similar_values(input)
+      # find first index where similarity is below cutoff
+      topk_idx = 0
+      for i, (_, sim) in enumerate(res):
+        if sim < cutoff:
+          topk_idx = i
+          break
+      return res[:topk_idx]
+    else:
+      return self.rows.most_similar_values(input, topk)
+  
+  def clear(self):
+    self.rows = Codebook(dim=self.dim, vsa_type=self.vsa_type)
+    for col in self.columns.values():
+      col.codebook = Codebook(dim=self.dim, vsa_type=self.vsa_type)
       
   def __getitem__(self, key):
     return self.rows[key]
